@@ -20,15 +20,13 @@ namespace AhaiLawDesktop
             string outDir = Path.Combine(projectDir, "out");
             string appUrl = "http://localhost:3000";
 
-            Process devServerProcess = null;
-
             try
             {
                 // If static export folder exists, serve it offline via built-in HttpListener
                 if (Directory.Exists(outDir) && File.Exists(Path.Combine(outDir, "index.html")))
                 {
                     int port = 41733;
-                    appUrl = "http://127.0.0.1:" + port + "/";
+                    appUrl = "http://127.0.0.1:" + port + "/AhaiLaw/";
                     StartStaticServer(outDir, port);
                 }
                 else
@@ -46,7 +44,7 @@ namespace AhaiLawDesktop
                             WindowStyle = ProcessWindowStyle.Hidden
                         };
 
-                        devServerProcess = Process.Start(serverPsi);
+                        Process.Start(serverPsi);
 
                         int attempts = 0;
                         while (attempts < 30 && !IsServerRunning(appUrl))
@@ -70,7 +68,7 @@ namespace AhaiLawDesktop
                 ProcessStartInfo appPsi = new ProcessStartInfo
                 {
                     FileName = edgePath,
-                    Arguments = "--app=" + appUrl + " --window-size=1366,850 --user-data-dir=\"" + profileDir + "\"",
+                    Arguments = "--app=\"" + appUrl + "\" --window-size=1366,850 --user-data-dir=\"" + profileDir + "\"",
                     UseShellExecute = false
                 };
 
@@ -123,7 +121,19 @@ namespace AhaiLawDesktop
         {
             try
             {
-                string relPath = context.Request.Url.AbsolutePath.TrimStart('/');
+                string rawPath = context.Request.Url.AbsolutePath.TrimStart('/');
+                
+                // Strip optional base path prefix (e.g., AhaiLaw/)
+                if (rawPath.StartsWith("AhaiLaw/", StringComparison.OrdinalIgnoreCase))
+                {
+                    rawPath = rawPath.Substring(8);
+                }
+                else if (rawPath.Equals("AhaiLaw", StringComparison.OrdinalIgnoreCase))
+                {
+                    rawPath = "";
+                }
+
+                string relPath = rawPath.TrimStart('/');
                 if (string.IsNullOrEmpty(relPath)) relPath = "index.html";
 
                 string filePath = Path.Combine(rootDir, relPath.Replace('/', Path.DirectorySeparatorChar));
@@ -135,8 +145,16 @@ namespace AhaiLawDesktop
 
                 if (!File.Exists(filePath))
                 {
-                    // SPA fallback
-                    filePath = Path.Combine(rootDir, "index.html");
+                    // Check if appending .html works
+                    if (File.Exists(filePath + ".html"))
+                    {
+                        filePath = filePath + ".html";
+                    }
+                    else
+                    {
+                        // SPA fallback
+                        filePath = Path.Combine(rootDir, "index.html");
+                    }
                 }
 
                 if (File.Exists(filePath))
@@ -174,6 +192,10 @@ namespace AhaiLawDesktop
                 case ".jpg":
                 case ".jpeg": return "image/jpeg";
                 case ".ico": return "image/x-icon";
+                case ".woff2": return "font/woff2";
+                case ".woff": return "font/woff";
+                case ".ttf": return "font/ttf";
+                case ".webmanifest": return "application/manifest+json";
                 default: return "application/octet-stream";
             }
         }
