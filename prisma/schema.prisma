@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                String         @id @default(uuid())
+  email             String?        @unique
+  username          String         @unique
+  current_level     Int            @default(1)
+  total_xp          Int            @default(0)
+  alignment_score   Float          @default(0) // -100 (Realisme Sosio-Legal) to 100 (Positivisme Murni)
+  keadilan_score    Float          @default(0) // 0 - 100
+  kepastian_score   Float          @default(0) // 0 - 100
+  kemanfaatan_score Float          @default(0) // 0 - 100
+  streak            Int            @default(0)
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+
+  progress          UserProgress[]
+  decisions         UserDecision[]
+  earned_badges     EarnedBadge[]
+}
+
+model EarnedBadge {
+  id         String   @id @default(uuid())
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id])
+  badge_id   String
+  earned_at  DateTime @default(now())
+
+  @@unique([user_id, badge_id])
+}
+
+model Module {
+  id                String         @id // e.g., MOD-001
+  title             String
+  category          String
+  era               String         // classic | modern
+  level_required    Int
+  difficulty        Int            // 1 - 5
+  xp_reward         Int
+  description       String
+  estimated_minutes Int
+
+  progress          UserProgress[]
+  cases             DilemmaCase[]
+}
+
+model UserProgress {
+  id              String   @id @default(uuid())
+  user_id         String
+  module_id       String
+  mastery         Int      @default(0) // 0 - 100
+  last_reviewed   DateTime @default(now())
+  next_review_srs DateTime @default(now())
+
+  user            User     @relation(fields: [user_id], references: [id])
+  module          Module   @relation(fields: [module_id], references: [id])
+
+  @@unique([user_id, module_id])
+}
+
+model DilemmaCase {
+  id                 String       @id @default(uuid())
+  module_id          String
+  title              String
+  facts              String       // JSON Array as string
+  subjective_context String       // JSON Array as string
+  statute            String
+  
+  module             Module       @relation(fields: [module_id], references: [id])
+  options            CaseOption[]
+  decisions          UserDecision[]
+}
+
+model CaseOption {
+  id              String       @id @default(uuid())
+  case_id         String
+  action_text     String
+  legal_basis     String
+  alignment_shift Float
+  keadilan        Float
+  kepastian       Float
+  kemanfaatan     Float
+  consequence     String?
+
+  case            DilemmaCase  @relation(fields: [case_id], references: [id])
+  user_decisions  UserDecision[]
+}
+
+model UserDecision {
+  id                 String      @id @default(uuid())
+  user_id            String
+  case_id            String
+  selected_option_id String
+  user_argumentation String
+  created_at         DateTime    @default(now())
+
+  user               User        @relation(fields: [user_id], references: [id])
+  case               DilemmaCase @relation(fields: [case_id], references: [id])
+  option             CaseOption  @relation(fields: [selected_option_id], references: [id])
+}
