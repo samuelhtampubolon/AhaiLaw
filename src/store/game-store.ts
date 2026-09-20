@@ -33,7 +33,22 @@ export const useGameStore = create<GameState>()(
       radarKemanfaatan: 0,
 
       decreaseHp: (amount) => set((state) => ({ hp: Math.max(0, state.hp - amount) })),
-      addXp: (amount) => set((state) => ({ xp: state.xp + amount })),
+      addXp: (amount) => set((state) => {
+        const newXp = state.xp + amount;
+        let newLevel = state.currentLevel;
+        
+        // Simple XP Thresholds for Levels:
+        if (newXp >= 500) newLevel = 5;
+        else if (newXp >= 250) newLevel = 4;
+        else if (newXp >= 100) newLevel = 3;
+        else if (newXp >= 50) newLevel = 2;
+        else newLevel = 1;
+
+        // Restore HP if leveled up
+        const newHp = newLevel > state.currentLevel ? 100 : state.hp;
+
+        return { xp: newXp, currentLevel: newLevel, hp: newHp };
+      }),
       addLexCoin: (amount) => set((state) => ({ lexCoin: state.lexCoin + amount })),
       updateRadar: (keadilan, kepastian, kemanfaatan) =>
         set((state) => ({
