@@ -18,18 +18,22 @@ export function ObjectivityRadar({
   ];
 
   return (
-    <div className="w-full h-[300px] flex justify-center items-center bg-slate-900 rounded-lg shadow-inner border border-slate-700">
+    <div className="w-full h-[240px] sm:h-[280px] md:h-[300px] flex justify-center items-center bg-slate-900/90 rounded-xl shadow-inner border border-slate-700/80 p-2">
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
-          <PolarGrid stroke="#475569" />
-          <PolarAngleAxis dataKey="subject" tick={{ fill: "#cbd5e1", fontSize: 14, fontWeight: "bold" }} />
+        <RadarChart cx="50%" cy="50%" outerRadius="68%" data={data}>
+          <PolarGrid stroke="#475569" strokeDasharray="3 3" />
+          <PolarAngleAxis 
+            dataKey="subject" 
+            tick={{ fill: "#fbbf24", fontSize: 12, fontWeight: "bold" }} 
+          />
           <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
           <Radar
-            name="Objectivity"
+            name="Objektivitas"
             dataKey="A"
-            stroke="#d97706"
+            stroke="#f59e0b"
+            strokeWidth={2}
             fill="#f59e0b"
-            fillOpacity={0.6}
+            fillOpacity={0.5}
             isAnimationActive={true}
           />
         </RadarChart>
