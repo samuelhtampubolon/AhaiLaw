@@ -2,41 +2,16 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ArrowLeft, Scale, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
-
-// Dummy data for a specific dilemma case
-const mockCase = {
-  id: "CASE-001",
-  title: "Kasus Formula Radbruch: UU Diskriminatif",
-  facts: [
-    "Sebuah rezim mengeluarkan UU yang mewajibkan penyitaan properti milik ras tertentu.",
-    "Anda adalah hakim yang mengadili sengketa penyitaan ini.",
-    "Undang-undang tersebut sah secara prosedur ketatanegaraan rezim tersebut."
-  ],
-  options: [
-    {
-      id: "OPT-1",
-      action: "Terapkan UU, sita properti (Positivisme Murni)",
-      consequence: "Kepastian hukum terjaga, namun Anda melanggar hak asasi fundamental.",
-      keadilan: 10,
-      kepastian: 95,
-      kemanfaatan: 40,
-      alignmentShift: 20
-    },
-    {
-      id: "OPT-2",
-      action: "Tolak UU, lindungi hak milik (Hukum Alam / Radbruch)",
-      consequence: "Keadilan substantif ditegakkan, walau bertentangan dengan UU tertulis (Lex Iniusta Non Est Lex).",
-      keadilan: 95,
-      kepastian: 10,
-      kemanfaatan: 60,
-      alignmentShift: -20
-    }
-  ]
-};
+import { caseData } from "@/data/cases";
 
 export default function DilemmaEngine() {
+  const params = useParams();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const currentCase = (caseData as any)[id || "1"] || caseData["1"];
+
   const { hp, decreaseHp, addXp, addLexCoin, updateRadar, updateAlignment } = useGameStore();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -47,7 +22,7 @@ export default function DilemmaEngine() {
 
   const handleConfirm = () => {
     if (!selectedOption) return;
-    const option = mockCase.options.find(o => o.id === selectedOption);
+    const option = currentCase.options.find((o: any) => o.id === selectedOption);
     if (option) {
       updateRadar(option.keadilan, option.kepastian, option.kemanfaatan);
       updateAlignment(option.alignmentShift);
@@ -74,11 +49,11 @@ export default function DilemmaEngine() {
         
         {/* Case Info Panel */}
         <section className="bg-slate-800/95 backdrop-blur-md p-6 rounded-2xl border border-slate-600 shadow-2xl">
-          <h2 className="text-2xl font-serif text-amber-500 font-bold mb-4">{mockCase.title}</h2>
+          <h2 className="text-2xl font-serif text-amber-500 font-bold mb-4">{currentCase.title}</h2>
           <div className="space-y-3">
             <h3 className="font-bold text-slate-300">Fakta Persidangan:</h3>
             <ul className="list-disc pl-5 space-y-2 text-slate-300">
-              {mockCase.facts.map((fact, idx) => (
+              {currentCase.facts.map((fact, idx) => (
                 <li key={idx}>{fact}</li>
               ))}
             </ul>
@@ -90,7 +65,7 @@ export default function DilemmaEngine() {
           <section className="bg-slate-800/90 backdrop-blur-md p-6 rounded-2xl border border-slate-600 shadow-2xl flex-1 flex flex-col">
             <h3 className="text-xl font-bold mb-6 text-amber-400">Putusan Hakim:</h3>
             <div className="flex-1 space-y-4">
-              {mockCase.options.map(opt => (
+              {currentCase.options.map(opt => (
                 <button 
                   key={opt.id}
                   onClick={() => handleSelect(opt.id)}
@@ -117,7 +92,7 @@ export default function DilemmaEngine() {
             <Scale className="w-16 h-16 text-amber-500 mb-4" />
             <h3 className="text-3xl font-serif font-bold text-amber-400 mb-4">Sidang Selesai</h3>
             <p className="text-xl text-slate-300 mb-8 max-w-2xl">
-              {mockCase.options.find(o => o.id === selectedOption)?.consequence}
+              {currentCase.options.find(o => o.id === selectedOption)?.consequence}
             </p>
             <div className="flex gap-4 mb-8">
               <div className="bg-slate-900 px-4 py-2 rounded-lg font-mono text-amber-400 border border-slate-700">+50 XP</div>
