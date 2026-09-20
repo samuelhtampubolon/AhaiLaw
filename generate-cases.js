@@ -1,42 +1,62 @@
 const fs = require('fs');
 const path = require('path');
 
-const subjects = [
-  "Seorang walikota", "Sebuah perusahaan multinasional", "Seorang dokter bedah", 
-  "Seorang aktivis lingkungan", "Seorang mahasiswa", "Seorang janda miskin", 
-  "Seorang hacker remaja", "Seorang polisi patroli", "Seorang guru honorer", "Seorang pengusaha properti"
-];
-
-const contexts = [
-  "menghadapi krisis finansial yang parah", "diancam oleh mafia lokal", "menemukan celah dalam undang-undang",
-  "tidak menyadari bahwa aturan telah berubah", "berusaha menyelamatkan nyawa seseorang", "terjebak dalam kontrak baku yang merugikan",
-  "mengalami diskriminasi sistemik", "dipaksa oleh atasan untuk berbohong", "membela diri dari serangan mematikan", "mencoba mengungkap korupsi besar"
-];
-
-const actions = [
-  "menggelapkan dana pajak sebesar 500 juta", "meretas sistem bank untuk membagikan uang ke panti asuhan", "menolak memberikan pelayanan publik",
-  "membangun pabrik di atas tanah sengketa", "menyebarkan dokumen rahasia negara ke publik", "membunuh penyerangnya menggunakan senjata api ilegal",
-  "melanggar kontrak kerja sepihak", "melakukan pencemaran nama baik di media sosial", "memalsukan tanda tangan untuk mencairkan asuransi", "menelantarkan kewajiban hukumnya"
-];
-
-const dilemmas = [
-  "Secara hukum positif tindakan ini jelas pidana, namun secara moral ia dianggap pahlawan.",
-  "Undang-undang melarangnya, tetapi asas kemanusiaan sangat membenarkannya.",
-  "Tidak ada aturan yang secara eksplisit melarangnya, namun publik merasa ini sangat tidak adil.",
-  "Hukum adat membenarkannya, tetapi hukum negara menjatuhkan vonis berat.",
-  "Prosedur formal dilanggar, tetapi kebenaran materiil justru terungkap karenanya."
-];
-
-const consequencesA = [
-  { action: "Terapkan Hukum Positif (Teks UU)", consequence: "Kepastian hukum terjaga, namun rasa keadilan masyarakat terluka.", keadilan: 10, kepastian: 95, kemanfaatan: 20, alignmentShift: 20 },
-  { action: "Hukum Maksimal demi Efek Jera", consequence: "Ketertiban umum terjamin, tapi dianggap kejam.", keadilan: 30, kepastian: 90, kemanfaatan: 60, alignmentShift: 30 },
-  { action: "Ikuti Preseden / Yurisprudensi", consequence: "Hukum dapat ditebak, walau mungkin sudah usang.", keadilan: 40, kepastian: 95, kemanfaatan: 50, alignmentShift: 15 },
-];
-
-const consequencesB = [
-  { action: "Bebaskan (Keadilan Substantif)", consequence: "Keadilan tercapai, namun kepastian hukum menjadi goyah.", keadilan: 95, kepastian: 10, kemanfaatan: 80, alignmentShift: -25 },
-  { action: "Gunakan Asas Diskresi / Ekuitas", consequence: "Hukum beradaptasi dengan manusia, namun rentan penyalahgunaan.", keadilan: 85, kepastian: 30, kemanfaatan: 90, alignmentShift: -20 },
-  { action: "Hukuman Percobaan / Restorative", consequence: "Pemulihan sosial terjadi, namun ada pihak yang merasa kurang tegas.", keadilan: 90, kepastian: 40, kemanfaatan: 85, alignmentShift: -15 },
+// Menggunakan Arketipe Terkategori agar kombinasinya 100% realistis dan logis.
+const archetypes = [
+  // 1. PIDANA: Pembelaan Terpaksa & Penganiayaan
+  {
+    subjects: ["Seorang warga sipil", "Seorang pemilik warung", "Seorang mahasiswa yang sering dirundung", "Seorang wanita yang berjalan sendirian malam hari"],
+    contexts: ["diancam dengan senjata tajam oleh perampok", "diserang oleh sekelompok preman mabuk", "mendapati rumahnya sedang dibobol maling"],
+    actions: ["memukul balik pelaku dengan tongkat besi hingga gegar otak", "menusuk pelaku menggunakan pisau dapur hingga tewas", "menggunakan setrum (taser) yang melukai permanen pelaku"],
+    dilemmas: ["Pelaku pembelaan ini kini ditetapkan sebagai tersangka penganiayaan berat oleh polisi.", "Secara teks hukum ia melukai orang lain, tapi secara moral ia hanya bertahan hidup."],
+    optA: { action: "Hukum sesuai teks (Positivisme Pidana)", consequence: "Terdakwa dipenjara. Kepastian hukum tegak, namun rasa keadilan publik hancur.", keadilan: 10, kepastian: 90, kemanfaatan: 20, alignmentShift: 20 },
+    optB: { action: "Bebaskan (Noodweer / Pembelaan Terpaksa)", consequence: "Terdakwa bebas. Keadilan substantif tercapai, masyarakat merasa aman membela diri.", keadilan: 95, kepastian: 40, kemanfaatan: 90, alignmentShift: -25 }
+  },
+  // 2. PERDATA: Sengketa Kontrak & Bisnis
+  {
+    subjects: ["Sebuah perusahaan startup teknologi", "Seorang kontraktor bangunan", "Sebuah agensi pengiriman barang", "Seorang supplier bahan baku pangan"],
+    contexts: ["mengalami force majeure akibat bencana alam", "menghadapi krisis rantai pasok global secara tiba-tiba", "gagal memenuhi tenggat waktu karena regulasi pemerintah yang mendadak berubah"],
+    actions: ["membatalkan sepihak pengiriman barang bernilai miliaran", "menunda pembayaran ke sub-kontraktor tanpa kejelasan", "gagal menyerahkan proyek tepat waktu"],
+    dilemmas: ["Pihak klien menggugat wanprestasi dan menuntut ganti rugi penuh tanpa mau tahu alasannya.", "Dalam kontrak baku, tidak ada klausul spesifik mengenai situasi krisis ini."],
+    optA: { action: "Kabulkan Gugatan Wanprestasi Penuh", consequence: "Kontrak (Pacta Sunt Servanda) ditegakkan kaku. Perusahaan tergugat bangkrut seketika.", keadilan: 30, kepastian: 95, kemanfaatan: 20, alignmentShift: 20 },
+    optB: { action: "Gunakan Asas Kepatutan (Rebus Sic Stantibus)", consequence: "Kontrak disesuaikan karena keadaan memaksa. Bisnis tetap jalan, walau kepastian teks dikorbankan.", keadilan: 85, kepastian: 30, kemanfaatan: 90, alignmentShift: -20 }
+  },
+  // 3. TATA NEGARA / ADMINISTRASI: Kebijakan Publik
+  {
+    subjects: ["Seorang bupati", "Seorang kepala dinas tata ruang", "Seorang gubernur", "Seorang menteri lingkungan hidup"],
+    contexts: ["menghadapi demonstrasi warga yang kelaparan akibat pabrik ditutup", "melihat ada celah kekosongan hukum dalam perizinan", "mendapat tekanan ekonomi untuk segera membuka lapangan kerja"],
+    actions: ["mengeluarkan diskresi (Freies Ermessen) tanpa payung hukum jelas", "memberikan izin operasi pabrik meski AMDAL belum sempurna", "mengabaikan prosedur birokrasi demi mempercepat bantuan langsung"],
+    dilemmas: ["Tindakan ini sangat bermanfaat bagi warga saat itu, namun secara prosedur administrasi negara ini cacat hukum (maladministrasi).", "Pengadilan PTUN kini sedang mengadili gugatan pembatalan kebijakan tersebut."],
+    optA: { action: "Batalkan Kebijakan (Asas Legalitas Mutlak)", consequence: "Birokrasi disiplin, namun warga kembali menderita dan kehilangan pekerjaan/bantuan.", keadilan: 20, kepastian: 100, kemanfaatan: 10, alignmentShift: 25 },
+    optB: { action: "Sahkan Diskresi (Kemanfaatan Publik)", consequence: "Kesejahteraan warga terselamatkan, namun membuka preseden pejabat berbuat sewenang-wenang.", keadilan: 80, kepastian: 20, kemanfaatan: 95, alignmentShift: -25 }
+  },
+  // 4. AGRARIA / TANAH: Sengketa Kepemilikan
+  {
+    subjects: ["Seorang petani miskin", "Sekelompok masyarakat adat", "Seorang pensiunan guru", "Sebuah yayasan yatim piatu"],
+    contexts: ["telah menempati lahan tersebut selama 30 tahun tanpa gangguan", "hanya memiliki surat girik peninggalan zaman kolonial", "merasa tanahnya dirampas oleh pengembang dengan sertifikat HGB baru"],
+    actions: ["menolak digusur oleh ekskavator pengembang properti raksasa", "memblokir akses jalan masuk ke area perkebunan perusahaan", "mendirikan tenda perlawanan di atas lahan sengketa"],
+    dilemmas: ["Pengembang memiliki Sertifikat Hak Milik formal yang sah, sementara warga hanya punya bukti historis penguasaan fisik.", "Hukum agraria menjunjung sertifikat, namun nurani melihat ada perampasan hak turun-temurun."],
+    optA: { action: "Eksekusi Penggusuran (Bukti Formal Sertifikat)", consequence: "Kepastian hukum pendaftaran tanah terjamin. Pengembang menang, warga kehilangan tempat tinggal.", keadilan: 10, kepastian: 95, kemanfaatan: 30, alignmentShift: 30 },
+    optB: { action: "Lindungi Penguasaan Fisik (Hukum Adat / UUPA)", consequence: "Warga tak berdaya dilindungi. Namun, sistem sertifikasi negara dianggap tidak berkekuatan absolut.", keadilan: 95, kepastian: 20, kemanfaatan: 80, alignmentShift: -30 }
+  },
+  // 5. DIGITAL / AI LAW: Kejahatan & Hak Cipta Cyber
+  {
+    subjects: ["Seorang seniman digital", "Sebuah perusahaan AI generatif", "Seorang programmer independen", "Seorang influencer media sosial"],
+    contexts: ["menemukan karyanya digunakan untuk melatih model AI tanpa izin", "membuat kode yang otomatis menyalin data publik secara masif", "tidak sengaja menyebarkan informasi palsu yang dibuat oleh deepfake"],
+    actions: ["menggugat perusahaan teknologi atas pelanggaran hak cipta masif", "menolak menghapus model AI karena menganggapnya wajar (fair use)", "berlindung di balik alasan kebebasan berpendapat"],
+    dilemmas: ["Hukum positif belum mengatur secara spesifik mengenai batas pencurian oleh kecerdasan buatan.", "Terdapat benturan antara melindungi inovasi teknologi dengan melindungi hak cipta individu."],
+    optA: { action: "Kabulkan Gugatan Hak Cipta Ketat", consequence: "Kreator dilindungi penuh. Namun inovasi teknologi dan riset AI di negara tersebut terhenti total.", keadilan: 85, kepastian: 70, kemanfaatan: 40, alignmentShift: 15 },
+    optB: { action: "Perbolehkan Fair Use demi Inovasi", consequence: "Perkembangan teknologi melesat cepat, namun kreator asli merasa dirugikan secara ekonomi dan moral.", keadilan: 30, kepastian: 50, kemanfaatan: 90, alignmentShift: -15 }
+  },
+  // 6. PIDANA KORUPSI: Niat vs Kerugian Negara
+  {
+    subjects: ["Seorang kepala desa", "Seorang rektor universitas negeri", "Seorang direktur BUMD", "Seorang pejabat pembuat komitmen (PPK)"],
+    contexts: ["berniat menyelamatkan uang kas negara agar tidak hangus di akhir tahun", "salah menginterpretasikan aturan pengadaan barang akibat ketidakjelasan juknis", "mengalihkan dana desa untuk membangun jembatan darurat yang rubuh"],
+    actions: ["menggunakan metode penunjukan langsung tanpa tender formal", "menandatangani pencairan dana sebelum proyek selesai 100%", "mengubah mata anggaran tanpa persetujuan DPRD/Kementerian"],
+    dilemmas: ["Secara administratif ada pelanggaran formil dan kerugian negara, namun tidak sepeser pun uang masuk ke kantong pribadi mereka (tidak ada mens rea koruptif).", "Mereka murni melakukan itu untuk pelayanan publik yang mendesak."],
+    optA: { action: "Hukum Tipikor (Formil Kerugian Negara)", consequence: "Aturan anti-korupsi dijaga sangat ketat, tapi pejabat inovatif ketakutan mengambil keputusan.", keadilan: 20, kepastian: 95, kemanfaatan: 10, alignmentShift: 30 },
+    optB: { action: "Bebaskan (Tidak ada Mens Rea Jahat)", consequence: "Hukum progresif diterapkan. Namun celah ini berpotensi ditiru koruptor asli dengan dalih 'kebijakan'.", keadilan: 90, kepastian: 30, kemanfaatan: 80, alignmentShift: -20 }
+  }
 ];
 
 function getRandom(arr) {
@@ -48,6 +68,8 @@ const islandsPerLevel = 10;
 const questionsPerIsland = 3;
 
 let caseDataCode = `// Generated by generate-cases.js
+// Kasus-kasus ini di-generate berdasarkan Arketipe Logis agar konteksnya 100% realistis di dunia hukum.
+
 export const getQuestionsForIsland = (islandId: string) => {
   const cases: Record<string, any[]> = {\n`;
 
@@ -58,42 +80,42 @@ for (let lvl = 1; lvl <= levels; lvl++) {
     const islandId = `${lvl}-${isl}`;
     let islandQuestions = [];
     
-    for (let q = 1; q <= questionsPerIsland; q++) {
-      const subject = getRandom(subjects);
-      const context = getRandom(contexts);
-      const action = getRandom(actions);
-      const dilemma = getRandom(dilemmas);
+    // Setiap pulau akan mengambil soal dari arketipe yang dirotasi agar temanya beragam namun tetap rasional
+    for (let q = 0; q < questionsPerIsland; q++) {
+      const arch = archetypes[(lvl + isl + q) % archetypes.length];
       
-      const optA = getRandom(consequencesA);
-      const optB = getRandom(consequencesB);
-
+      const subject = getRandom(arch.subjects);
+      const context = getRandom(arch.contexts);
+      const action = getRandom(arch.actions);
+      const dilemma = getRandom(arch.dilemmas);
+      
       islandQuestions.push(`
         {
           id: "CASE-${globalCounter}",
-          title: "Kasus #${globalCounter}: ${subject.split(' ')[1].toUpperCase()} DILEMA",
+          title: "Kasus #${globalCounter}: Sengketa Hukum & Dilema",
           facts: [
             "${subject} ${context}.",
-            "Sebagai akibatnya, ia ${action}.",
+            "Sebagai tindakan responsif, ia ${action}.",
             "${dilemma}"
           ],
           options: [
             {
               id: "OPT-1",
-              action: "${optA.action}",
-              consequence: "${optA.consequence}",
-              keadilan: ${optA.keadilan},
-              kepastian: ${optA.kepastian},
-              kemanfaatan: ${optA.kemanfaatan},
-              alignmentShift: ${optA.alignmentShift}
+              action: "${arch.optA.action}",
+              consequence: "${arch.optA.consequence}",
+              keadilan: ${arch.optA.keadilan},
+              kepastian: ${arch.optA.kepastian},
+              kemanfaatan: ${arch.optA.kemanfaatan},
+              alignmentShift: ${arch.optA.alignmentShift}
             },
             {
               id: "OPT-2",
-              action: "${optB.action}",
-              consequence: "${optB.consequence}",
-              keadilan: ${optB.keadilan},
-              kepastian: ${optB.kepastian},
-              kemanfaatan: ${optB.kemanfaatan},
-              alignmentShift: ${optB.alignmentShift}
+              action: "${arch.optB.action}",
+              consequence: "${arch.optB.consequence}",
+              keadilan: ${arch.optB.keadilan},
+              kepastian: ${arch.optB.kepastian},
+              kemanfaatan: ${arch.optB.kemanfaatan},
+              alignmentShift: ${arch.optB.alignmentShift}
             }
           ]
         }`);
@@ -110,4 +132,4 @@ caseDataCode += `  };
 `;
 
 fs.writeFileSync(path.join(__dirname, 'src', 'data', 'cases.ts'), caseDataCode);
-console.log('Successfully generated 240 unique cases!');
+console.log('Successfully generated 240 completely realistic unique cases based on Strict Archetypes!');
